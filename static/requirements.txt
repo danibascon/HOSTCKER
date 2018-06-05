@@ -1,0 +1,10 @@
+appdirs
+bottle
+gunicorn
+lxml
+packaging
+pytz
+requests
+six
+requests_oauthlib
+oauthlib

@@ -1,0 +1,10 @@
+create table usuarios
+(
+usuario varchar(2),
+nombre varchar(20),
+contra varchar(20),
+email varchar(30),
+constraint pr_usuario primary key(usuario),
+constraint correos check(email regexp '.*@.*\.(com|es)'),
+constraint  uniq_email unique(email)
+);
