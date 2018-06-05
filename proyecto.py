@@ -9,6 +9,12 @@ import commands
 #
 
 
+commands.getoutput("docker run -d --name servidor -v proftpd:/var/www/html danibascon/proftpd")
+commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor2 --link servidor:servidor danibascon/apache2")
+
+usuario=""
+contra=""
+
 @route('/', method = "get")
 def inicio():
 	return template('inicio.tpl',variable='')
@@ -52,9 +58,27 @@ def registro():
   else:
     insert = "insert into usuarios values ('"+user+"','"+passwd+"','"+nombre+"','"+apellido+"','"+email+"');"
     commands.getoutput("mysql -u dani -pdani proyecto -e "+'"'+insert+'"')
+    
     if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios where usuario = "+'"'+user+'";'+"'").split("\n")[2]) == 0:
       var = "Ha ocurrido un problema a la hora de registar el usuario '"+user+"'"
       return template('register.tpl', variable = var)
+
+    commands.getoutput("docker stop servidor ; docker rm servidor")
+    usuarios = commands.getoutput("mysql -u dani -pdani proyecto -e 'select usuario from usuarios'").split("\n")[2:]
+    usuario=""
+    for i in range(len(usuarios)):
+      usuario = usuario + usuarios[i]  + ";"
+
+    usuario = usuario[:-1]
+
+    contras = commands.getoutput("mysql -u dani -pdani proyecto -e 'select contra from usuarios'").split("\n")[2:]
+    contra=""
+    for i in range(len(contras)):
+      contra = contra + contras[i]  + ";"
+
+    contra = contra[:-1]
+    commands.getoutput("docker run -d --name servidor -e USER='"+usuario+"' -e PASS='"+contra+"' -v proftpd:/var/www/html danibascon/proftpd")
+
     return template('registrado.tpl', variable = user)
 
 

@@ -1,6 +1,6 @@
 %include('header.tpl')
 	<center>
-	<h1>Gracias porregistrarte en Hostcker</h1>
+	<h1>Gracias por registrarte en Hostcker</h1>
 	<h2>Has recibido toda la información por correo</h2>
 	</center>
 	<br>
