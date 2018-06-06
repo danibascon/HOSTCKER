@@ -6,10 +6,10 @@ DOCUMENTROOT=${DOCUMENTROOT:-""}
 
 
 
-echo"
+echo "
 <VirtualHost *:80>
         ServerAdmin webmaster@localhost
-        ServerName  $SERVER_NAME
+        ServerName  dit.$SERVER_NAME.org
         Alias / /var/www/html/$DOCUMENTROOT/
         <Directory /var/www/html/$DOCUMENTROOT/>
                 Options Indexes
@@ -20,10 +20,10 @@ echo"
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
-" > /etc/apache/sites-available/www.conf
-
-a2ensite www.conf
-a2dissite 000-default.conf
-exec
-
-
+" > /etc/apache2/sites-available/000-default.conf
+#a2ensite www.conf
+#a2dissite 000-default.conf
+#service apache2 reload
+exec /usr/sbin/apache2 -D FOREGROUND
+#/etc/init.d/apache2 
+#/usr/sbin/apache2

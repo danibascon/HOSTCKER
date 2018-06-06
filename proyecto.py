@@ -7,17 +7,42 @@ import requests
 import commands
 
 #
+def docker_start_usuario(user,puerto):
+  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario")
+ 
+  return
+def docker_stop_servidor():
+  commands.getoutput("docker stop servidor servidor_apache;docke rm servidor servidor_apache")
 
+  return
 
-commands.getoutput("docker run -d --name servidor -v proftpd:/var/www/html danibascon/proftpd")
-commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor2 --link servidor:servidor danibascon/apache2")
+def docker_start_servidor(num): 
+  usuario =""
+  contra=""
+  variables = commands.getoutput("mysql -u dani -pdani proyecto -e 'select usuario,contra,puerto from usuarios'").split("\n")[2:]
+  
+  for i in range(len(variables)):
+    if num!=0:
+      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2])
 
-usuario=""
-contra=""
+    usuario = usuario + variables[i].split("\t")[0] + ";"
+    contra = contra + variables[i].split("\t")[1] + ";"
+
+  commands.getoutput("docker run -d --name servidor -e USER='" + usuario[:-1] + "' -e PASS='" + contra[:-1] + "' -v proftpd:/var/www/html danibascon/proftpd")
+  commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor_apache --link servidor:servidor danibascon/apache2")
+
+  return
+
+def docker_stop_usuario(user):
+  commands.getoutput("docker stop " + user + ";docker rm " + user)
+
+  return  
+
+docker_start_servidor(1)
 
 @route('/', method = "get")
 def inicio():
-	return template('inicio.tpl',variable='')
+	return template('inicio.tpl',variable='')    
 
 
 @route('/login', method = "post")
@@ -52,34 +77,28 @@ def registro():
   nombre = request.forms.get('nombre')
   apellido = request.forms.get('apellido')
   email = request.forms.get('email')
+  if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios;'").split("\n")[2]) == 0:
+    puerto = 83
+  else:
+    puerto = int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select puerto from usuarios order by puerto desc;'").split("\n")[2]) + 1
+
+
   if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios where usuario = "+'"'+user+'";'+"'").split("\n")[2]) != 0:
     var = 'Ese usuario ya esta registrado'
     return template('register.tpl', variable = var)
   else:
-    insert = "insert into usuarios values ('"+user+"','"+passwd+"','"+nombre+"','"+apellido+"','"+email+"');"
+    insert = "insert into usuarios values ('"+user+"','"+passwd+"','"+nombre+"','"+apellido+"','"+email+"','"+str(puerto)+"');"
     commands.getoutput("mysql -u dani -pdani proyecto -e "+'"'+insert+'"')
     
     if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios where usuario = "+'"'+user+'";'+"'").split("\n")[2]) == 0:
       var = "Ha ocurrido un problema a la hora de registar el usuario '"+user+"'"
       return template('register.tpl', variable = var)
 
-    commands.getoutput("docker stop servidor ; docker rm servidor")
-    usuarios = commands.getoutput("mysql -u dani -pdani proyecto -e 'select usuario from usuarios'").split("\n")[2:]
-    usuario=""
-    for i in range(len(usuarios)):
-      usuario = usuario + usuarios[i]  + ";"
-
-    usuario = usuario[:-1]
-
-    contras = commands.getoutput("mysql -u dani -pdani proyecto -e 'select contra from usuarios'").split("\n")[2:]
-    contra=""
-    for i in range(len(contras)):
-      contra = contra + contras[i]  + ";"
-
-    contra = contra[:-1]
-    commands.getoutput("docker run -d --name servidor -e USER='"+usuario+"' -e PASS='"+contra+"' -v proftpd:/var/www/html danibascon/proftpd")
-
-    return template('registrado.tpl', variable = user)
+    else:
+      docker_stop_servidor()
+      docker_start_servidor(0)
+      docker_start_usuario(user,puerto)
+      return template('registrado.tpl', variable = user)
 
 
 @route('/baja', method = 'get')
@@ -96,6 +115,7 @@ def darbaja():
     delete = "delete from usuarios where usuario = '"+user+"'"
     commands.getoutput("mysql -u dani -pdani proyecto -e "+'"'+delete+'"')
     var="El usuario '"+user+"' ha sido eliminado satisfactoriamente"
+    docker_stop_usuario(user)
     return template('bajacuenta.tpl', variable=var)
 
     if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios where usuario = "+'"'+user+'";'+"'").split("\n")[2]) == 1:
