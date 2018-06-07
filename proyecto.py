@@ -12,24 +12,29 @@ def docker_start_usuario(user,puerto):
  
   return
 def docker_stop_servidor():
-  commands.getoutput("docker stop servidor servidor_apache;docke rm servidor servidor_apache")
+  commands.getoutput("docker stop servidor servidor_apache ; docker rm servidor servidor_apache")
 
   return
 
-def docker_start_servidor(num): 
+def docker_start_servidor():
   usuario =""
-  contra=""
+  contra="" 
+  num=int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios;'").split("\n")[2])
   variables = commands.getoutput("mysql -u dani -pdani proyecto -e 'select usuario,contra,puerto from usuarios'").split("\n")[2:]
   
-  for i in range(len(variables)):
-    if num!=0:
+  if num!=0:
+    for i in range(len(variables)):
       docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2])
 
-    usuario = usuario + variables[i].split("\t")[0] + ";"
-    contra = contra + variables[i].split("\t")[1] + ";"
+      usuario = usuario + variables[i].split("\t")[0] + ";"
+      contra = contra + variables[i].split("\t")[1] + ";"
 
-  commands.getoutput("docker run -d --name servidor -e USER='" + usuario[:-1] + "' -e PASS='" + contra[:-1] + "' -v proftpd:/var/www/html danibascon/proftpd")
-  commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor_apache --link servidor:servidor danibascon/apache2")
+    commands.getoutput("docker run -d --name servidor -e USER='" + usuario[:-1] + "' -e PASS='" + contra[:-1] + "' -v proftpd:/var/www/html danibascon/proftpd")
+
+  else:
+    commands.getoutput("docker run -d --name servidor -e USER='" + usuario + "' -e PASS='" + contra + "' -v proftpd:/var/www/html danibascon/proftpd")
+ 
+  commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor_apache --link servidor:servidor danibascon/apache2:1")
 
   return
 
@@ -38,7 +43,7 @@ def docker_stop_usuario(user):
 
   return  
 
-docker_start_servidor(1)
+docker_start_servidor()
 
 @route('/', method = "get")
 def inicio():
@@ -82,7 +87,6 @@ def registro():
   else:
     puerto = int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select puerto from usuarios order by puerto desc;'").split("\n")[2]) + 1
 
-
   if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios where usuario = "+'"'+user+'";'+"'").split("\n")[2]) != 0:
     var = 'Ese usuario ya esta registrado'
     return template('register.tpl', variable = var)
@@ -96,7 +100,7 @@ def registro():
 
     else:
       docker_stop_servidor()
-      docker_start_servidor(0)
+      docker_start_servidor()
       docker_start_usuario(user,puerto)
       return template('registrado.tpl', variable = user)
 
