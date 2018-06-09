@@ -5,9 +5,9 @@ FROM debian
 RUN apt update 
 RUN apt install  apache2 libapache2-mod-php7.0 nano python php7.0 php7.0-mysql  -y
 
-# # Install net2ftp.
-
 VOLUME /var/wwww/html
+
+#Variables de entorno
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
