@@ -8,12 +8,23 @@ import commands
 
 #
 def docker_start_usuario(user,puerto):
-  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario")
+  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql-server:mysql-server -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario")
  
   return
-def docker_stop_servidor():
-  commands.getoutput("docker stop servidor servidor_apache ; docker rm servidor servidor_apache")
 
+def docker_stop_servidor():
+  commands.getoutput("docker stop servidor servidor_apache mysql-server phpmyadmin; docker rm servidor servidor_apache mysql-server phpmyadmin")
+
+  return
+
+def docker_start_mysql(usuario,contra):
+  if usuario =="":
+    commands.getoutput(" docker run -d --name mysql-server -v mysql:/var/lib/mysql danibascon/mysql-server:2")
+ 
+  else:
+    commands.getoutput(" docker run -d --name mysql-server -e MYSQL_USER='" + usuario + "' -e MYSQL_PASSWORD='" + contra + "' -e MYSQL_DATABASE='" + usuario + "'  -v mysql:/var/lib/mysql danibascon/mysql-server:1")
+ 
+  commands.getoutput("docker run -d -p 82:80 --name phpmyadmin --link mysql-server:mysql-server danibascon/phpmyadmin:1")
   return
 
 def docker_start_servidor():
@@ -25,7 +36,6 @@ def docker_start_servidor():
   if num!=0:
     for i in range(len(variables)):
       docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2])
-
       usuario = usuario + variables[i].split("\t")[0] + ";"
       contra = contra + variables[i].split("\t")[1] + ";"
 
@@ -33,9 +43,10 @@ def docker_start_servidor():
 
   else:
     commands.getoutput("docker run -d --name servidor -e USER='" + usuario + "' -e PASS='" + contra + "' -v proftpd:/var/www/html danibascon/proftpd")
+    docker_start_mysql(usuario,contra)
+
  
   commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor_apache --link servidor:servidor danibascon/apache2:1")
-
   return
 
 def docker_stop_usuario(user):
@@ -100,6 +111,7 @@ def registro():
 
     else:
       docker_stop_servidor()
+      docker_start_mysql(user,passwd)
       docker_start_servidor()
       docker_start_usuario(user,puerto)
       return template('registrado.tpl', variable = user)

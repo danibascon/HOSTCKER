@@ -12,7 +12,7 @@ ADD www.conf /etc/apache2/sites-available/
 #ADD usuario.conf /etc/apache2/sites-available/
 RUN a2ensite www.conf && a2dissite 000-default.conf
 
-VOLUME /var/wwww/html
+VOLUME /var/www/html
 
 RUN mkdir /var/www/html/net2ftp
 ADD net2ftp /var/www/html/net2ftp
