@@ -8,23 +8,25 @@ import commands
 
 #
 def docker_start_usuario(user,puerto):
-  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql-server:mysql-server -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario")
+  #commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario")
+  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario:7")
  
   return
 
 def docker_stop_servidor():
-  commands.getoutput("docker stop servidor servidor_apache mysql-server phpmyadmin; docker rm servidor servidor_apache mysql-server phpmyadmin")
+  commands.getoutput("docker stop servidor servidor_apache mysql phpmyadmin; docker rm servidor servidor_apache mysql phpmyadmin")
 
   return
 
 def docker_start_mysql(usuario,contra):
-  if usuario =="":
-    commands.getoutput(" docker run -d --name mysql-server -v mysql:/var/lib/mysql danibascon/mysql-server:2")
+  #if usuario =="":
+  #  commands.getoutput(" docker run -d --name mysql-server -v mysql:/var/lib/mysql danibascon/mysql-server:2")
  
-  else:
-    commands.getoutput(" docker run -d --name mysql-server -e MYSQL_USER='" + usuario + "' -e MYSQL_PASSWORD='" + contra + "' -e MYSQL_DATABASE='" + usuario + "'  -v mysql:/var/lib/mysql danibascon/mysql-server:1")
- 
-  commands.getoutput("docker run -d -p 82:80 --name phpmyadmin --link mysql-server:mysql-server danibascon/phpmyadmin:1")
+  #else:
+    #commands.getoutput("docker run -d --name mysql-server -e MYSQL_USER='" + usuario + "' -e MYSQL_PASSWORD='" + contra + "' -e MYSQL_DATABASE='" + usuario + "'  -v mysql:/var/lib/mysql danibascon/mysql-server:1")
+  commands.getoutput("docker  run  --name  mysql  -e  DB_REMOTE_ROOT_NAME==root -e DB_REMOTE_ROOT_PASS=root  -e DB_USER=" + usuario + "  -e  DB_NAME=" + usuario + "  -e  DB_PASS=" + contra + "  -e MYSQL_ROOT_HOST=0.0.0.0 -d  -v  mysql:/var/lib/mysql  danibascon/mysql-ubuntu:1")
+  #commands.getoutput("docker run -d -p 82:80 --name phpmyadmin --link mysql-server:mysql-server danibascon/phpmyadmin:1")
+  commands.getoutput("docker run -d -p 82:80 --name phpmyadmin --link mysql:mysql danibascon/phpmyadmin7-ubuntu:2")
   return
 
 def docker_start_servidor():

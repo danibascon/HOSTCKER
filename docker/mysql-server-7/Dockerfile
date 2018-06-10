@@ -8,5 +8,5 @@ VOLUME /var/lib/mysql
 ADD cmd.sh /cmd.sh
 RUN chmod +x /cmd.sh
 
-#ENTRYPOINT /cmd.sh
-CMD usr/sbin/mysqld
+ENTRYPOINT /cmd.sh
+#CMD usr/sbin/mysqld

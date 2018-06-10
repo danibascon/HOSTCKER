@@ -13,4 +13,4 @@ EXPOSE 21
 EXPOSE 22
 
 ENTRYPOINT /cmd.sh
-CMD ["proftpd","--nodaemon"]
+#CMD ["proftpd","--nodaemon"]
