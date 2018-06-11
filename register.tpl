@@ -17,6 +17,10 @@
 		<br>
 		<label>Contraseña</label>
 		<input type="password" name="passwd" min='4' max='10' required/>
+		<form action="checkbox-form.php" method="post">
+		<br>
+		<label>Añadir wordpress como CMS</label>		
+		<input type="checkbox" name="wordpress" value="Yes" />
 		<br>
 		<input type="submit" value="Enviar">
 	</form>

@@ -7,9 +7,8 @@ import requests
 import commands
 
 #
-def docker_start_usuario(user,puerto):
-  #commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario")
-  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario:7")
+def docker_start_usuario(user,puerto, var):
+  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e VAR='" + var + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario:7")
  
   return
 
@@ -19,25 +18,26 @@ def docker_stop_servidor():
   return
 
 def docker_start_mysql(usuario,contra):
-  #if usuario =="":
-  #  commands.getoutput(" docker run -d --name mysql-server -v mysql:/var/lib/mysql danibascon/mysql-server:2")
+  if usuario =="":
+    commands.getoutput("docker  run  --name  mysql  -e  DB_REMOTE_ROOT_NAME==root -e DB_REMOTE_ROOT_PASS=root  -e MYSQL_ROOT_HOST=0.0.0.0 -d  -v  mysql:/var/lib/mysql  danibascon/mysql-ubuntu:1")
  
-  #else:
-    #commands.getoutput("docker run -d --name mysql-server -e MYSQL_USER='" + usuario + "' -e MYSQL_PASSWORD='" + contra + "' -e MYSQL_DATABASE='" + usuario + "'  -v mysql:/var/lib/mysql danibascon/mysql-server:1")
-  commands.getoutput("docker  run  --name  mysql  -e  DB_REMOTE_ROOT_NAME==root -e DB_REMOTE_ROOT_PASS=root  -e DB_USER=" + usuario + "  -e  DB_NAME=" + usuario + "  -e  DB_PASS=" + contra + "  -e MYSQL_ROOT_HOST=0.0.0.0 -d  -v  mysql:/var/lib/mysql  danibascon/mysql-ubuntu:1")
-  #commands.getoutput("docker run -d -p 82:80 --name phpmyadmin --link mysql-server:mysql-server danibascon/phpmyadmin:1")
+  else:
+    commands.getoutput("docker  run  --name  mysql  -e  DB_REMOTE_ROOT_NAME==root -e DB_REMOTE_ROOT_PASS=root  -e DB_USER=" + usuario + "  -e  DB_NAME=" + usuario + "  -e  DB_PASS=" + contra + "  -e MYSQL_ROOT_HOST=0.0.0.0 -d  -v  mysql:/var/lib/mysql  danibascon/mysql-ubuntu:1")
+
   commands.getoutput("docker run -d -p 82:80 --name phpmyadmin --link mysql:mysql danibascon/phpmyadmin7-ubuntu:2")
   return
 
 def docker_start_servidor():
   usuario =""
-  contra="" 
+  contra=""
   num=int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios;'").split("\n")[2])
   variables = commands.getoutput("mysql -u dani -pdani proyecto -e 'select usuario,contra,puerto from usuarios'").split("\n")[2:]
   
+
   if num!=0:
+    var=""
     for i in range(len(variables)):
-      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2])
+      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2],var)
       usuario = usuario + variables[i].split("\t")[0] + ";"
       contra = contra + variables[i].split("\t")[1] + ";"
 
@@ -45,7 +45,7 @@ def docker_start_servidor():
 
   else:
     commands.getoutput("docker run -d --name servidor -e USER='" + usuario + "' -e PASS='" + contra + "' -v proftpd:/var/www/html danibascon/proftpd")
-    docker_start_mysql(usuario,contra)
+
 
  
   commands.getoutput("docker run -d -p 21:21 -p 22:22 -p 81:80 --name servidor_apache --link servidor:servidor danibascon/apache2:1")
@@ -56,6 +56,7 @@ def docker_stop_usuario(user):
 
   return  
 
+docker_start_mysql(usuario ="",contra="")         
 docker_start_servidor()
 
 @route('/', method = "get")
@@ -95,6 +96,8 @@ def registro():
   nombre = request.forms.get('nombre')
   apellido = request.forms.get('apellido')
   email = request.forms.get('email')
+  wordpress = request.forms.get('wordpress')
+
   if int(commands.getoutput("mysql -u dani -pdani proyecto -e 'select count(usuario) from usuarios;'").split("\n")[2]) == 0:
     puerto = 83
   else:
@@ -115,7 +118,7 @@ def registro():
       docker_stop_servidor()
       docker_start_mysql(user,passwd)
       docker_start_servidor()
-      docker_start_usuario(user,puerto)
+      docker_start_usuario(user,puerto,wordpress)
       return template('registrado.tpl', variable = user)
 
 
