@@ -6,11 +6,11 @@ import json
 import requests
 import commands
 
-#def docker_start_usuario(user,puerto, var):
-#  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e VAR='" + var + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario:7")
+def docker_start_usuario(user,puerto, wordpress):
+  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e VAR='" + wordpress + "' -e DOCUMENTROOT='" + user + "'  danibascon/apache2-usuario:7.2")
  
-def docker_start_usuario(user,puerto):
-  commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario:7")
+#def docker_start_usuario(user,puerto):
+ # commands.getoutput("docker run -d -p " + str(puerto) + ":80 --name " + user +" --link mysql:mysql -v proftpd:/var/www/html -e SERVER_NAME='" + user + "' -e DOCUMENTROOT='" + user + "' danibascon/apache2-usuario:7")
  
   return
 
@@ -37,10 +37,10 @@ def docker_start_servidor():
   
 
   if num!=0:
-#    var=""
+    wordpress=""
     for i in range(len(variables)):
-#      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2],var)
-      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2])
+      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2],wordpress)
+#      docker_start_usuario(variables[i].split("\t")[0],variables[i].split("\t")[2])
 
       #ip_cliente=commands.getoutput("docker exec -it "+variables[i].split("\t")[0]+" ip a | grep global | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'")
 #      commands.getoutput("echo '"+ip_cliente+"' dit.hostcker-"+variables[i].split("\t")[0]+".org' >> /etc/hosts")
@@ -112,7 +112,7 @@ def registro():
   nombre = request.forms.get('nombre')
   apellido = request.forms.get('apellido')
   email = request.forms.get('email')
-#  wordpress = request.forms.get('wordpress')
+  wordpress = str(request.forms.get('wordpress'))
 #  mail="Bienvenidos a HOSTCKER, "+nombre+" "+apellido+"\n\nusuario: "+user+"\ncontra: "+passwd+"\ndominio: dit."+user+".org"
 
 
@@ -135,11 +135,12 @@ def registro():
     else:
       docker_stop_servidor()
       docker_start_mysql(user,passwd)
-      ip_cliente=commands.getoutput("docker exec -it "+user+" ip a | grep global | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'")
+      #ip_cliente=commands.getoutput("docker exec -it "+user+" ip a | grep global | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'")
       #commands.getoutput("echo '"+ip_cliente+"' dit.hostcker-"+user+".org' >> /etc/hosts")
       docker_start_servidor()
-#      docker_start_usuario(user,puerto,wordpress)
-      docker_start_usuario(user,puerto)
+      commands.getoutput("docker stop "+user+" ; docker rm "+user)
+      docker_start_usuario(user,puerto,wordpress)
+#      docker_start_usuario(user,puerto)
 #      commands.getoutput("echo '"+mail+"'| sudo sendmail  -s 'HOSTCKER' "+email)
       return template('registrado.tpl', variable = user)
 

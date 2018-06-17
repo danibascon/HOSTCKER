@@ -20,7 +20,7 @@
 		<form action="checkbox-form.php" method="post">
 		<br>
 		<label>Añadir wordpress como CMS</label>		
-		<input type="checkbox" name="wordpress" value="Yes" />
+		<input type="checkbox" name="wordpress" value="1" />
 		<br>
 		<input type="submit" value="Enviar">
 	</form>

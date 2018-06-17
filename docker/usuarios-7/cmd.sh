@@ -22,9 +22,9 @@ echo "
 </VirtualHost>
 " > /etc/apache2/sites-available/000-default.conf
 
-if [[ $VAR != "" ]] ;then
-	cp /wordpress /var/www/html/$DOCUMENTROOT/
-	chown www-data:www-data -R /var/www/html/$DOCUMENTROOT/wordpress
+if [[ $VAR == "1" ]] ;then
+	cp -r /wordpress/* /var/www/html/$DOCUMENTROOT/
+	chown www-data:www-data -R /var/www/html/$DOCUMENTROOT/
 fi
 
 exec /usr/sbin/apache2 -D FOREGROUND
